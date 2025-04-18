@@ -6,10 +6,10 @@ import { login, refreshToken, register } from "../controllers/authController";
 
 const router = Router();
 
-router.post("/:role/register", register);
-router.post("/:role/login", login);
-router.post("/refresh-token", refreshToken);
-router.get("/my-profile", authenticate, (req, res) => {
+router.post("/auth/:role/register", register);
+router.post("/auth/:role/login", login);
+router.post("/auth/refresh-token", refreshToken);
+router.get("/auth/my-profile", authenticate, (req, res) => {
   res.json(req.user);
 });
 
