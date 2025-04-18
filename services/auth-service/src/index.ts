@@ -37,7 +37,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/api/v1/auth", AuthRouter);
+app.use("/api/v1", AuthRouter);
 
 // ======================
 // 4. Health Check
