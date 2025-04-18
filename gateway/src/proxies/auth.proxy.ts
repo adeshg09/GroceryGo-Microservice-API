@@ -5,59 +5,36 @@ import { URL } from "url";
 
 export const authProxy = async (req: Request, res: Response) => {
   try {
-    // 1. Preserve exact path (including /api/v1)
-    const targetUrl = new URL(req.originalUrl, env.AUTH_SERVICE_URL);
-
-    // 2. Debug log the full URL
-    console.log(`Proxying to: ${targetUrl.toString()}`);
+    const authUrl = new URL(req.originalUrl, env.AUTH_SERVICE_URL);
 
     const options = {
-      hostname: targetUrl.hostname,
-      port: targetUrl.port || (targetUrl.protocol === "https:" ? 443 : 80),
-      path: targetUrl.pathname + targetUrl.search, // Include query params
+      hostname: authUrl.hostname,
+      port: authUrl.port,
+      path: authUrl.pathname,
       method: req.method,
       headers: {
         ...req.headers,
-        host: targetUrl.hostname, // Critical for Render
-        connection: "close",
-        "content-type": "application/json", // Force JSON
+        host: authUrl.hostname,
       },
-      timeout: 30000,
     };
 
     const proxyReq = http.request(options, (proxyRes) => {
-      // Forward status and headers
       res.writeHead(proxyRes.statusCode || 500, proxyRes.headers);
-
-      // Stream response
-      proxyRes.pipe(res);
+      proxyRes.pipe(res, { end: true });
     });
 
     proxyReq.on("error", (err) => {
       console.error("Proxy error:", err);
-      if (!res.headersSent) {
-        res.status(502).json({
-          message: "Auth service unavailable",
-          error: err.message,
-        });
-      }
+      res.status(502).json({ message: "Auth service unavailable" });
     });
 
-    // 3. Ensure body is forwarded correctly
-    if (req.body) {
-      const bodyData = JSON.stringify(req.body);
-      proxyReq.setHeader("Content-Length", bodyData.length);
-      proxyReq.write(bodyData);
+    if (req.body && ["POST", "PUT", "PATCH"].includes(req.method)) {
+      proxyReq.write(JSON.stringify(req.body));
     }
 
     proxyReq.end();
-  } catch (err: any) {
+  } catch (err) {
     console.error("Proxy setup error:", err);
-    if (!res.headersSent) {
-      res.status(500).json({
-        message: "Internal server error",
-        error: err.message,
-      });
-    }
+    res.status(500).json({ message: "Internal server error" });
   }
 };
