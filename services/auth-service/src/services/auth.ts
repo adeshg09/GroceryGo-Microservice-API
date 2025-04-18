@@ -6,8 +6,8 @@ import { generateTokens } from "../utils/tokens";
 import { getModelByRole } from "../utils";
 
 // Register a new user
-export const registerUser = async (userData: RegisterDTO, role: string) => {
-  const { phone, password } = userData;
+export const registerUser = async (userData: RegisterDTO) => {
+  const { phone, password, role } = userData;
 
   if (!phone || !password || !role) {
     throw new Error(ERROR_MESSAGES.REQUIRED_FIELDS);
