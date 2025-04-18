@@ -11,7 +11,12 @@ const app = express();
 // ======================
 // 1. Middleware Setup
 // ======================
-app.use(cors()); // Enable CORS
+app.use(
+  cors({
+    origin: ["https://grocerygo-microservice-api-gateway.onrender.com"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
 app.use(helmet()); // Security headers
 app.use(express.json()); // Parse JSON bodies
 

@@ -5,7 +5,8 @@ import { URL } from "url";
 
 export const authProxy = async (req: Request, res: Response) => {
   try {
-    const authUrl = new URL(req.originalUrl, env.AUTH_SERVICE_URL);
+    const targetPath = req.originalUrl.replace("/api/v1", "");
+    const authUrl = new URL(targetPath, env.AUTH_SERVICE_URL);
 
     const options = {
       hostname: authUrl.hostname,
@@ -16,7 +17,10 @@ export const authProxy = async (req: Request, res: Response) => {
         ...req.headers,
         host: authUrl.hostname,
       },
+      timeout: 30000,
     };
+
+    console.log(`Proxying to: ${authUrl.toString()}`); // Debug log
 
     const proxyReq = http.request(options, (proxyRes) => {
       res.writeHead(proxyRes.statusCode || 500, proxyRes.headers);
