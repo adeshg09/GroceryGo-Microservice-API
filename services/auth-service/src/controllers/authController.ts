@@ -9,6 +9,7 @@ import { env } from "../config/env";
 export const register = async (req: Request, res: Response) => {
   try {
     console.log("test");
+    console.log("req body", req.body);
     const user = await registerUser(req.body);
     res.status(201).json(user);
   } catch (error: any) {
