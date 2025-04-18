@@ -5,8 +5,7 @@ import { URL } from "url";
 
 export const authProxy = async (req: Request, res: Response) => {
   try {
-    const targetPath = req.originalUrl.replace("/api/v1", "");
-    const authUrl = new URL(targetPath, env.AUTH_SERVICE_URL);
+    const authUrl = new URL(req.originalUrl, env.AUTH_SERVICE_URL);
 
     const options = {
       hostname: authUrl.hostname,
