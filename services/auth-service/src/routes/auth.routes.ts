@@ -2,15 +2,23 @@
 
 import { Router } from "express";
 import { authenticate } from "../middlewares/auth";
-import { login, refreshToken, register } from "../controllers/authController";
+import {
+  login,
+  refreshToken,
+  register,
+  sendOtp,
+  verifyOtp,
+} from "../controllers/authController";
 
 const router = Router();
 
-router.post("/auth/register", register);
-router.post("/auth/login", login);
-router.post("/auth/refresh-token", refreshToken);
-router.get("/auth/my-profile", authenticate, (req, res) => {
-  res.json(req.user);
-});
+router.post("/register", register);
+router.post("/login", login);
+router.post("/refresh-token", refreshToken);
+router.post("/send-otp", sendOtp);
+router.post("/verify-otp", verifyOtp);
+// router.post("/forgot-password", forgotPassword);
+// router.post("/verify-reset-otp", verifyResetOtp);
+// router.post("/reset-password", resetPassword);
 
 export default router;

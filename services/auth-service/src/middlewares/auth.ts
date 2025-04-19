@@ -2,6 +2,13 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { User } from "../models/User";
 import { env } from "../config/env";
+import { sanitizeUser } from "../utils";
+import {
+  ERROR_MESSAGES,
+  RESPONSE_MESSAGES,
+  STATUS_CODES,
+} from "../config/constants";
+import { errorResponse } from "../utils/response";
 
 export const authenticate = async (
   req: Request,
@@ -9,24 +16,44 @@ export const authenticate = async (
   next: NextFunction
 ): Promise<void> => {
   const token = req.headers.authorization?.split(" ")[1];
+
   if (!token) {
-    res.status(401).json({ message: "Access token required" });
-    return;
+    return errorResponse(
+      res,
+      STATUS_CODES.UNAUTHORIZED,
+      RESPONSE_MESSAGES.UNAUTHORIZED,
+      ERROR_MESSAGES.ACCESS_TOKEN_REQUIRED,
+      {}
+    );
   }
 
   try {
     const decoded = jwt.verify(token, env.ACCESS_TOKEN_SECRET) as {
       userId: string;
     };
+
     const user = await User.findById(decoded.userId);
+
     if (!user) {
-      res.status(403).json({ message: "Invalid token" });
-      return;
+      return errorResponse(
+        res,
+        STATUS_CODES.FORBIDDEN,
+        RESPONSE_MESSAGES.FORBIDDEN,
+        ERROR_MESSAGES.TOKEN_INVALID,
+        {}
+      );
     }
 
-    req.user = user;
+    const safeUser = await sanitizeUser(user);
+    req.user = safeUser;
     next();
-  } catch (error) {
-    res.status(403).json({ message: "Invalid or expired token" });
+  } catch (error: any) {
+    return errorResponse(
+      res,
+      STATUS_CODES.FORBIDDEN,
+      RESPONSE_MESSAGES.FORBIDDEN,
+      ERROR_MESSAGES.TOKEN_INVALID,
+      error.message
+    );
   }
 };

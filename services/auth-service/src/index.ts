@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import helmet from "helmet";
 import AuthRouter from "./routes/auth.routes";
+import UserRouter from "./routes/user.routes";
 import { env } from "./config/env";
 
 // Initialize Express app
@@ -37,7 +38,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/api/v1", AuthRouter);
+app.use("/api/v1/auth", AuthRouter);
+app.use("/api/v1/users", UserRouter);
 
 // ======================
 // 4. Health Check

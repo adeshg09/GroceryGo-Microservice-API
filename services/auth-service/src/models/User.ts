@@ -2,21 +2,39 @@ import { Schema, model, Document } from "mongoose";
 import { USER_ROLES } from "../config/constants";
 
 export interface IUser extends Document {
-  email: string;
-  password: string;
   phone: string;
+  password: string;
   role: USER_ROLES;
   isActivated: boolean;
   refreshTokens?: string[];
+  profile?: Schema.Types.ObjectId;
+  isPhoneVerified: boolean;
+  otpData: {
+    code: String | undefined;
+    expiry: Date | undefined;
+    attempts: number;
+    context: String;
+  };
 }
 
 const UserSchema = new Schema<IUser>(
   {
-    phone: { type: String, required: true },
+    phone: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: Object.values(USER_ROLES), required: true },
+    role: { type: String, required: true, enum: Object.values(USER_ROLES) },
     isActivated: { type: Boolean, default: false },
-    refreshTokens: [{ type: String }],
+    refreshTokens: { type: [String], default: [] },
+    profile: {
+      type: Schema.Types.ObjectId,
+      ref: "Profile",
+    },
+    isPhoneVerified: { type: Boolean, default: false },
+    otpData: {
+      code: { type: String },
+      expiry: { type: Date },
+      attempts: { type: Number, default: 0 },
+      context: { type: String },
+    },
   },
   { timestamps: true, discriminatorKey: "role" }
 );

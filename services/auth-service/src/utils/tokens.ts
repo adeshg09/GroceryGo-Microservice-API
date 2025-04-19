@@ -5,7 +5,8 @@ import { TokenPayload } from "../dtos/AuthDTO";
 
 // Function to generate tokens
 export const generateTokens = (
-  user: IUser
+  user: IUser,
+  rememberMe?: boolean
 ): { accessToken: string; refreshToken: string } => {
   const accessToken = jwt.sign(
     { userId: user._id, role: user.role },
@@ -16,7 +17,9 @@ export const generateTokens = (
   const refreshToken = jwt.sign(
     { userId: user._id, role: user.role },
     process.env.REFRESH_TOKEN_SECRET as string,
-    { expiresIn: TOKEN_EXPIRY.REFRESH } as SignOptions
+    {
+      expiresIn: rememberMe ? TOKEN_EXPIRY.REMEMBER_ME : TOKEN_EXPIRY.REFRESH,
+    } as SignOptions
   );
 
   return { accessToken, refreshToken };
