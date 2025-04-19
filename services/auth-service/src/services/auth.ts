@@ -150,7 +150,10 @@ export const confirmOtpVerification = async (verifyOtpData: verifyOtpDto) => {
     code: undefined,
     expiry: undefined,
     attempts: 0,
-    context: "",
+    context:
+      expectedContext === OTP_CONTEXT.PHONE_VERIFICATION.CONTEXT
+        ? ""
+        : expectedContext,
   };
 
   let tokens = null;
@@ -223,6 +226,9 @@ export const finalizePasswordReset = async (
 
   const hashedPassword = await bcrypt.hash(newPassword, 10);
   user.password = hashedPassword;
+
+  // Clear OTP context after successful reset password
+  user.otpData.context = "";
 
   await user.save();
 
