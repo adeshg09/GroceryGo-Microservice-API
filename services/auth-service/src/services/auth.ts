@@ -82,7 +82,10 @@ export const initiatePhoneVerification = async ({
   userId: string;
   context: string;
 }) => {
+  console.log("userId", userId);
+  console.log("context is", context);
   const user = await User.findById(userId);
+  console.log("user is", user);
   if (!user) throw new Error(ERROR_MESSAGES.USER_NOT_FOUND);
 
   const otp = randomInt(100000, 999999).toString();

@@ -113,7 +113,7 @@ export const refreshToken = async (req: Request, res: Response) => {
 // Send OTP
 export const sendOtp = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.body;
+    const { userId, context } = req.body;
 
     if (!userId) {
       return errorResponse(
@@ -125,7 +125,7 @@ export const sendOtp = async (req: Request, res: Response) => {
       );
     }
 
-    await initiatePhoneVerification(userId);
+    await initiatePhoneVerification({ userId, context });
     return successResponse(
       res,
       STATUS_CODES.OK,
