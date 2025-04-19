@@ -2,12 +2,15 @@ import { Request, Response } from "express";
 import {
   registerUser,
   loginUser,
-  confirmPhoneVerification,
-  initiatePhoneVerification,
+  initiateOtpVerification,
+  confirmOtpVerification,
+  finalizePasswordReset,
+  findUserForPasswordReset,
 } from "../services/auth";
 import {
   ERROR_MESSAGES,
   GENERIC_MESSAGES,
+  OTP_CONTEXT,
   RESPONSE_MESSAGES,
   STATUS_CODES,
 } from "../config/constants";
@@ -53,6 +56,7 @@ export const login = async (req: Request, res: Response) => {
       { user: safeUser, tokens }
     );
   } catch (error: any) {
+    console.log("error", error);
     return errorResponse(
       res,
       STATUS_CODES.UNAUTHORIZED,
@@ -113,19 +117,7 @@ export const refreshToken = async (req: Request, res: Response) => {
 // Send OTP
 export const sendOtp = async (req: Request, res: Response) => {
   try {
-    const { userId, context } = req.body;
-
-    if (!userId) {
-      return errorResponse(
-        res,
-        STATUS_CODES.BAD_REQUEST,
-        RESPONSE_MESSAGES.BAD_REQUEST,
-        ERROR_MESSAGES.REQUIRED_FIELDS,
-        {}
-      );
-    }
-
-    await initiatePhoneVerification({ userId, context });
+    await initiateOtpVerification(req.body);
     return successResponse(
       res,
       STATUS_CODES.OK,
@@ -146,15 +138,18 @@ export const sendOtp = async (req: Request, res: Response) => {
 // Verify OTP
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    const { userId, otp } = req.body;
-    const { tokens, user } = await confirmPhoneVerification(userId, otp);
+    // const { userId, otp } = req.body;
+    const { tokens, user } = await confirmOtpVerification(req.body);
     const safeUser = sanitizeUser(user);
+    const responseData = tokens
+      ? { user: safeUser, tokens } // Phone verification
+      : { user: safeUser }; // Password reset
     return successResponse(
       res,
       STATUS_CODES.OK,
       RESPONSE_MESSAGES.SUCCESS,
       GENERIC_MESSAGES.OTP_VERIFIED,
-      { user: safeUser, tokens }
+      responseData
     );
   } catch (error: any) {
     return errorResponse(
@@ -167,49 +162,57 @@ export const verifyOtp = async (req: Request, res: Response) => {
   }
 };
 
-// Forgot Password
-// export const forgotPassword = async (req: Request, res: Response) => {
-//   try {
-//     const { phone, countryCode } = req.body;
-//     if (!phone || !countryCode) {
-//       return errorResponse(
-//         res,
-//         STATUS_CODES.BAD_REQUEST,
-//         RESPONSE_MESSAGES.BAD_REQUEST,
-//         "phone and countryCode is required",
-//         {}
-//       );
-//     }
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { userId, contactMethod } = await findUserForPasswordReset(req.body);
+    if (userId && contactMethod) {
+      // Auto-trigger OTP after finding user
+      await initiateOtpVerification({
+        userId,
+        context: OTP_CONTEXT.PASSWORD_RESET.CONTEXT,
+      });
+    }
 
-//     const formattedPhoneNo = `${countryCode}${phone}`;
-//     const user = await User.findOne({ phone: formattedPhoneNo });
+    return successResponse(
+      res,
+      STATUS_CODES.OK,
+      RESPONSE_MESSAGES.SUCCESS,
+      GENERIC_MESSAGES.RESET_OTP_SUCCESS,
+      {
+        userId,
+        contactMethod,
+      }
+    );
+  } catch (error: any) {
+    return errorResponse(
+      res,
+      STATUS_CODES.NOT_FOUND,
+      RESPONSE_MESSAGES.NOT_FOUND,
+      error.message,
+      error
+    );
+  }
+};
 
-//     if (!user) {
-//       return errorResponse(
-//         res,
-//         STATUS_CODES.NOT_FOUND,
-//         RESPONSE_MESSAGES.NOT_FOUND,
-//         ERROR_MESSAGES.USER_NOT_FOUND,
-//         {}
-//       );
-//     }
-
-//     await initiatePhoneVerification(user._id as string);
-
-//     return successResponse(
-//       res,
-//       STATUS_CODES.OK,
-//       RESPONSE_MESSAGES.SUCCESS,
-//       GENERIC_MESSAGES.OTP_VERIFIED,
-//       { user: safeUser, tokens }
-//     );
-//   } catch (error: any) {
-//     return errorResponse(
-//       res,
-//       STATUS_CODES.BAD_REQUEST,
-//       RESPONSE_MESSAGES.BAD_REQUEST,
-//       error.message,
-//       error
-//     );
-//   }
-// };
+// Reset Password (after OTP verification)
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { user } = await finalizePasswordReset(req.body);
+    const safeUser = sanitizeUser(user);
+    return successResponse(
+      res,
+      STATUS_CODES.OK,
+      RESPONSE_MESSAGES.SUCCESS,
+      GENERIC_MESSAGES.RESET_PASSWORD_SUCCESS,
+      { user: safeUser }
+    );
+  } catch (error: any) {
+    return errorResponse(
+      res,
+      STATUS_CODES.BAD_REQUEST,
+      RESPONSE_MESSAGES.BAD_REQUEST,
+      error.message,
+      error
+    );
+  }
+};

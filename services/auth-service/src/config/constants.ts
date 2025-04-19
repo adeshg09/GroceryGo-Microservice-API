@@ -63,8 +63,11 @@ export const ERROR_MESSAGES = {
   OTP_INVALID: "Invalid OTP",
   OTP_EXPIRED: "OTP has expired",
   OTP_ATTEMPTS_EXCEEDED: "Maximum OTP attempts reached",
+  INVALID_OTP_CONTEXT: "Invalid OTP context",
   INVALID_COUNTRYCODE_FORMAT: "Country code must start with + (e.g. +91)",
   ACCESS_TOKEN_REQUIRED: "Access token required",
+  FORGOT_PASSWORD_REQUIRED_FIELDS:
+    "Either (phone + countryCode) or email must be provided",
 };
 
 export const RESPONSE_MESSAGES = {
@@ -86,4 +89,9 @@ export const GENERIC_MESSAGES = {
   PROFILE_CREATED: "User profile created successfully",
   PROFILE_FETCHED: "User profile fetched successfully",
   USERNAME_SUGGESTIONS: "Username suggestions generated successfully",
+  FORGOT_PASSWORD_USER_FOUND_SUCCESS: "forgotPassword",
+  RESET_OTP_SUCCESS:
+    "Password reset code sent to your registered contact method successfully",
+  RESET_PASSWORD_SUCCESS:
+    "Password reset successfully.You need to login for further process.",
 };
