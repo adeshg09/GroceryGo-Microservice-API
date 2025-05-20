@@ -14,7 +14,7 @@ const app = express();
 // ======================
 app.use(
   cors({
-    origin: ["https://grocerygo-microservice-api-gateway.onrender.com"],
+    origin: ["*"],
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );

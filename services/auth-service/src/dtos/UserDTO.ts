@@ -6,10 +6,5 @@ export interface CreateUserProfileDTO {
   userName: string;
   gender: GENDERS;
   dob: Date;
-  email: string;
-  location: {
-    city: string;
-    state: string;
-    country: string;
-  };
+  phone: string;
 }

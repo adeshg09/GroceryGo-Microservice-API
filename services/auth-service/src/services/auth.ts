@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { randomInt } from "crypto";
 import { User } from "../models/User";
-import { ERROR_MESSAGES, OTP_CONTEXT, USER_ROLES } from "../config/constants";
+import { ERROR_MESSAGES, OTP_CONTEXT } from "../config/constants";
 import {
   forgotPasswordDto,
   LoginDTO,
@@ -11,40 +11,27 @@ import {
   verifyOtpDto,
 } from "../dtos/AuthDTO";
 import { generateTokens } from "../utils/tokens";
-import { getModelByRole } from "../utils";
 import { sendSmsOtp } from "../utils/sms";
 import { Error } from "mongoose";
+import { sendEmailOtp } from "../utils/email";
 
 // Register a new user
 export const registerUser = async (userData: RegisterDTO) => {
-  const { phone, password, role, countryCode } = userData;
+  const { email, password } = userData;
 
-  if (!phone || !countryCode || !password || !role) {
+  if (!email || !password) {
     throw new Error(ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
-  if (!countryCode.startsWith("+")) {
-    throw new Error(ERROR_MESSAGES.INVALID_COUNTRYCODE_FORMAT);
-  }
-
-  const formattedPhoneNo = `${countryCode}${phone}`;
-
-  const existingUser = await User.findOne({ phone: formattedPhoneNo });
+  const existingUser = await User.findOne({ email: email });
   console.log("existinguser", existingUser);
   if (existingUser) throw new Error(ERROR_MESSAGES.USER_EXISTS);
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const Model = getModelByRole(role as USER_ROLES);
-  console.log("Model is", Model);
-
-  const newUser = new Model({
-    phone: formattedPhoneNo,
+  const newUser = new User({
+    email: email,
     password: hashedPassword,
-    role,
-    isPhoneVerified: false,
-    otpAttempts: 0,
-    refreshTokens: [],
   });
 
   await newUser.save();
@@ -54,18 +41,13 @@ export const registerUser = async (userData: RegisterDTO) => {
 
 // Login user
 export const loginUser = async (userData: LoginDTO) => {
-  const { phone, countryCode, password, rememberMe = false } = userData;
+  const { email, password, rememberMe = false } = userData;
 
-  if (!phone || !countryCode || !password) {
+  if (!email || !password) {
     throw new Error(ERROR_MESSAGES.REQUIRED_FIELDS);
   }
-  if (!countryCode.startsWith("+")) {
-    throw new Error(ERROR_MESSAGES.INVALID_COUNTRYCODE_FORMAT);
-  }
 
-  const formattedPhoneNo = `${countryCode}${phone}`;
-
-  const user = await User.findOne({ phone: formattedPhoneNo });
+  const user = await User.findOne({ email: email });
 
   if (!user) throw new Error(ERROR_MESSAGES.USER_NOT_FOUND);
 
@@ -109,7 +91,8 @@ export const initiateOtpVerification = async (otpData: OtpDTO) => {
 
   await user.save();
 
-  await sendSmsOtp(user.phone, otp);
+  // await sendSmsOtp(user.email, otp);
+  await sendEmailOtp(user.email, otp);
   return { success: true };
 };
 

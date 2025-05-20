@@ -8,12 +8,7 @@ export interface IProfile extends Document {
   userName: string;
   gender?: "Male" | "Female" | "Other";
   dob?: Date;
-  email: string;
-  location?: {
-    city: string;
-    state: string;
-    country: string;
-  };
+  phone: string;
   user: Schema.Types.ObjectId;
 }
 
@@ -23,10 +18,7 @@ const profileSchema = new Schema<IProfile>({
   userName: { type: String, required: true, unique: true },
   gender: { type: String, enum: Object.values(GENDERS) },
   dob: { type: Date },
-  email: { type: String, required: true, unique: true },
-  location: {
-    type: Object,
-  },
+  phone: { type: String, required: true },
   user: {
     type: Schema.Types.ObjectId,
     ref: "User",

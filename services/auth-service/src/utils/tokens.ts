@@ -9,13 +9,13 @@ export const generateTokens = (
   rememberMe?: boolean
 ): { accessToken: string; refreshToken: string } => {
   const accessToken = jwt.sign(
-    { userId: user._id, role: user.role },
+    { userId: user._id },
     process.env.ACCESS_TOKEN_SECRET as string,
     { expiresIn: TOKEN_EXPIRY.ACCESS } as SignOptions
   );
 
   const refreshToken = jwt.sign(
-    { userId: user._id, role: user.role },
+    { userId: user._id },
     process.env.REFRESH_TOKEN_SECRET as string,
     {
       expiresIn: rememberMe ? TOKEN_EXPIRY.REMEMBER_ME : TOKEN_EXPIRY.REFRESH,

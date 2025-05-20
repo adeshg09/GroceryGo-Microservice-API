@@ -1,20 +1,16 @@
-import bcrypt from "bcrypt";
-import { Customer, DeliveryPartner, User } from "../models/User";
-import { ERROR_MESSAGES, USER_ROLES } from "../config/constants";
-import { LoginDTO, RegisterDTO } from "../dtos/AuthDTO";
-import { generateTokens } from "../utils/tokens";
-import { getModelByRole } from "../utils";
+import { ERROR_MESSAGES } from "../config/constants";
 import { CreateUserProfileDTO } from "../dtos/UserDTO";
 import { Profile } from "../models/Profile";
+import { User } from "../models/User";
 
 // Create a user Profile
 export const createUserProfile = async (
   userId: string,
   userProfileData: CreateUserProfileDTO
 ) => {
-  const { firstName, lastName, userName, email } = userProfileData;
+  const { firstName, lastName, userName, phone, dob, gender } = userProfileData;
 
-  if (!firstName || !lastName || !userName || !email) {
+  if (!firstName || !lastName || !userName || !phone || !gender || !dob) {
     throw new Error(ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
@@ -34,7 +30,7 @@ export const createUserProfile = async (
 
   // Check for unique fields
   const existingProfile = await Profile.findOne({
-    $or: [{ userName }, { email }],
+    $or: [{ userName }, { phone }],
   });
 
   if (existingProfile) {
