@@ -10,7 +10,7 @@ export const createUserProfile = async (
 ) => {
   const { firstName, lastName, userName, phone, dob, gender } = userProfileData;
 
-  if (!firstName || !lastName || !userName || !phone || !gender || !dob) {
+  if (!firstName || !lastName || !userName || !phone || !dob) {
     throw new Error(ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
@@ -33,12 +33,8 @@ export const createUserProfile = async (
     $or: [{ userName }, { phone }],
   });
 
-  if (existingProfile) {
-    throw new Error(
-      existingProfile.userName === userName
-        ? ERROR_MESSAGES.USERNAME_EXISTS
-        : ERROR_MESSAGES.EMAIL_EXISTS
-    );
+  if (existingProfile && existingProfile.userName === userName) {
+    throw new Error(ERROR_MESSAGES.USERNAME_EXISTS);
   }
 
   // Create new profile
@@ -63,7 +59,10 @@ export const createUserProfile = async (
 
 // Get user Profile
 export const getUserProfile = async (userId: string) => {
-  const userProfile = await Profile.findOne({ user: userId });
+  console.log("userId", userId);
+  const userProfile = await User.findOne({
+    _id: userId,
+  }).populate("profile");
   if (!userProfile) {
     throw new Error(ERROR_MESSAGES.PROFILE_NOT_FOUND);
   }

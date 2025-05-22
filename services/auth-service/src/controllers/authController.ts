@@ -23,7 +23,9 @@ import { sanitizeUser } from "../utils";
 // Register
 export const register = async (req: Request, res: Response) => {
   try {
-    const user = await registerUser(req.body);
+    console.log("req.body", req.body);
+    const user = await registerUser(req.body, res);
+    console.log("user", user);
     const safeUser = sanitizeUser(user);
     return successResponse(
       res,
@@ -33,6 +35,7 @@ export const register = async (req: Request, res: Response) => {
       { user: safeUser }
     );
   } catch (error: any) {
+    console.log("error", error);
     return errorResponse(
       res,
       STATUS_CODES.BAD_REQUEST,

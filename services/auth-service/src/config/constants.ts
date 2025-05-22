@@ -50,6 +50,8 @@ export const STATUS_CODES = {
 export const ERROR_MESSAGES = {
   REQUIRED_FIELDS: "All the Fields are required",
   USER_EXISTS: "User already exists",
+  EMAIL_ALREADY_EXISTS:
+    "This email is associated with an existing account.You can log into it or create a new account with a different email address.",
   INVALID_CREDENTIALS: "Invalid credentials",
   TOKEN_INVALID: "Invalid or expired token",
   USER_NOT_FOUND: "User not found",
@@ -80,6 +82,7 @@ export const RESPONSE_MESSAGES = {
 };
 
 export const GENERIC_MESSAGES = {
+  EMAIL_AVAILABLE: "Email is available. You can proceed with registration.",
   REGISTER_SUCCESS: "User registered successfully",
   LOGIN_SUCCESS: "User logged in successfully",
   OTP_SENT: "OTP sent successfully",

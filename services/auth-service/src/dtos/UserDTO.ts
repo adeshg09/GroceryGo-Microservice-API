@@ -7,4 +7,5 @@ export interface CreateUserProfileDTO {
   gender: GENDERS;
   dob: Date;
   phone: string;
+  bio?: string;
 }

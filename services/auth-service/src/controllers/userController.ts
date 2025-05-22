@@ -11,7 +11,7 @@ import {
   STATUS_CODES,
 } from "../config/constants";
 import { successResponse, errorResponse } from "../utils/response";
-import { sanitizeProfile } from "../utils";
+import { sanitizeProfile, sanitizeUserAndProfile } from "../utils";
 
 export const createProfile = async (req: Request, res: Response) => {
   try {
@@ -41,14 +41,14 @@ export const getProfile = async (req: Request, res: Response) => {
   try {
     const userId = req.user._id;
     const profile = await getUserProfile(userId);
-    const safeProfile = sanitizeProfile(profile);
+    const safeProfile = sanitizeUserAndProfile(profile);
 
     return successResponse(
       res,
       STATUS_CODES.OK,
       RESPONSE_MESSAGES.SUCCESS,
       GENERIC_MESSAGES.PROFILE_FETCHED,
-      { profile: safeProfile }
+      { userProfile: safeProfile }
     );
   } catch (error: any) {
     return errorResponse(

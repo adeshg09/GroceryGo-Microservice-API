@@ -1,7 +1,13 @@
 import bcrypt from "bcrypt";
 import { randomInt } from "crypto";
 import { User } from "../models/User";
-import { ERROR_MESSAGES, OTP_CONTEXT } from "../config/constants";
+import {
+  ERROR_MESSAGES,
+  GENERIC_MESSAGES,
+  OTP_CONTEXT,
+  RESPONSE_MESSAGES,
+  STATUS_CODES,
+} from "../config/constants";
 import {
   forgotPasswordDto,
   LoginDTO,
@@ -14,17 +20,35 @@ import { generateTokens } from "../utils/tokens";
 import { sendSmsOtp } from "../utils/sms";
 import { Error } from "mongoose";
 import { sendEmailOtp } from "../utils/email";
+import { successResponse } from "../utils/response";
 
 // Register a new user
-export const registerUser = async (userData: RegisterDTO) => {
-  const { email, password } = userData;
+export const registerUser = async (userData: RegisterDTO, res: any) => {
+  const { email, password, checkOnly } = userData;
 
-  if (!email || !password) {
+  if (!email) {
     throw new Error(ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
   const existingUser = await User.findOne({ email: email });
   console.log("existinguser", existingUser);
+
+  if (checkOnly) {
+    if (existingUser) {
+      throw new Error(ERROR_MESSAGES.EMAIL_ALREADY_EXISTS);
+    } else {
+      return successResponse(
+        res,
+        STATUS_CODES.OK,
+        RESPONSE_MESSAGES.SUCCESS,
+        GENERIC_MESSAGES.EMAIL_AVAILABLE
+      );
+    }
+  }
+
+  if (!password) {
+    throw new Error(ERROR_MESSAGES.REQUIRED_FIELDS);
+  }
   if (existingUser) throw new Error(ERROR_MESSAGES.USER_EXISTS);
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -42,6 +66,7 @@ export const registerUser = async (userData: RegisterDTO) => {
 // Login user
 export const loginUser = async (userData: LoginDTO) => {
   const { email, password, rememberMe = false } = userData;
+  console.log("userData", userData);
 
   if (!email || !password) {
     throw new Error(ERROR_MESSAGES.REQUIRED_FIELDS);
@@ -67,19 +92,33 @@ export const loginUser = async (userData: LoginDTO) => {
 
 // Initiate Otp Verification
 export const initiateOtpVerification = async (otpData: OtpDTO) => {
-  const { userId, context } = otpData;
+  const { userId, context, email, phone } = otpData;
+  console.log("email", email);
+  console.log("phone", phone);
+  console.log("userId", userId);
+  console.log("context", context);
 
-  if (!userId || !context) {
+  if (!context) {
     throw new Error(ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
-  const user = await User.findById(userId);
+  let user;
+  if (email) {
+    user = await User.findOne({ email: email });
+  } else if (userId) {
+    user = await User.findById(userId);
+  } else {
+    user = await User.findOne({ phone: phone });
+  }
+
+  console.log("user", user);
+
   if (!user) throw new Error(ERROR_MESSAGES.USER_NOT_FOUND);
 
   const otpContext = OTP_CONTEXT.getContext(context);
   if (!otpContext) throw new Error(ERROR_MESSAGES.INVALID_OTP_CONTEXT);
 
-  const otp = randomInt(100000, 999999).toString();
+  const otp = randomInt(1000, 9999).toString();
   const otpExpiry = new Date(Date.now() + otpContext.EXPIRY_TIME * 60 * 1000);
 
   user.otpData = {
@@ -92,19 +131,33 @@ export const initiateOtpVerification = async (otpData: OtpDTO) => {
   await user.save();
 
   // await sendSmsOtp(user.email, otp);
-  await sendEmailOtp(user.email, otp);
+  if (email) {
+    await sendEmailOtp(user.email, otp);
+  } else {
+    // await sendSmsOtp(user.phone, otp);
+  }
   return { success: true };
 };
 
 // Confirm Otp Verification
 export const confirmOtpVerification = async (verifyOtpData: verifyOtpDto) => {
-  const { userId, otp, expectedContext } = verifyOtpData;
+  const { userId, otp, expectedContext, email, phone } = verifyOtpData;
 
-  if (!userId || !otp || !expectedContext) {
+  if (!otp || !expectedContext) {
     throw new Error(ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
-  const user = await User.findById(userId);
+  let user;
+  if (email) {
+    user = await User.findOne({ email: email });
+  } else if (userId) {
+    user = await User.findById(userId);
+  } else {
+    user = await User.findOne({ phone: phone });
+  }
+
+  console.log("user", user);
+
   if (!user) throw new Error(ERROR_MESSAGES.USER_NOT_FOUND);
 
   const otpContext = OTP_CONTEXT.getContext(expectedContext);

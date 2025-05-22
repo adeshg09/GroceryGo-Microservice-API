@@ -9,6 +9,7 @@ export interface IProfile extends Document {
   gender?: "Male" | "Female" | "Other";
   dob?: Date;
   phone: string;
+  bio?: string;
   user: Schema.Types.ObjectId;
 }
 
@@ -17,8 +18,9 @@ const profileSchema = new Schema<IProfile>({
   lastName: { type: String, required: true },
   userName: { type: String, required: true, unique: true },
   gender: { type: String, enum: Object.values(GENDERS) },
-  dob: { type: Date },
+  dob: { type: Date, required: true },
   phone: { type: String, required: true },
+  bio: { type: String },
   user: {
     type: Schema.Types.ObjectId,
     ref: "User",

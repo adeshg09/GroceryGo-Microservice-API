@@ -4,6 +4,7 @@ export interface RegisterDTO {
   email: string;
   password: string;
   rememberMe?: boolean;
+  checkOnly?: boolean;
 }
 
 export interface LoginDTO {
@@ -17,12 +18,16 @@ export interface TokenPayload extends JwtPayload {
 }
 
 export interface OtpDTO {
-  userId: string;
+  userId?: string;
+  email?: string;
+  phone?: string;
   context: string;
 }
 
 export interface verifyOtpDto {
-  userId: string;
+  userId?: string;
+  email?: string;
+  phone?: string;
   otp: string;
   expectedContext: string;
 }

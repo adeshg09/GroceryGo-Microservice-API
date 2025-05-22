@@ -16,6 +16,7 @@ export const authenticate = async (
   next: NextFunction
 ): Promise<void> => {
   const token = req.headers.authorization?.split(" ")[1];
+  console.log("token", token);
 
   if (!token) {
     return errorResponse(
@@ -31,8 +32,10 @@ export const authenticate = async (
     const decoded = jwt.verify(token, env.ACCESS_TOKEN_SECRET) as {
       userId: string;
     };
+    console.log("decoded.userId", decoded.userId);
 
     const user = await User.findById(decoded.userId);
+    console.log("user", user);
 
     if (!user) {
       return errorResponse(
@@ -45,7 +48,9 @@ export const authenticate = async (
     }
 
     const safeUser = await sanitizeUser(user);
+    console.log("safeUser", safeUser);
     req.user = safeUser;
+    console.log("req.user", req.user);
     next();
   } catch (error: any) {
     return errorResponse(
